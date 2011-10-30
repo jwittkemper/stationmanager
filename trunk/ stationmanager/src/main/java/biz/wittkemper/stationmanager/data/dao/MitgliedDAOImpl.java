@@ -1,6 +1,7 @@
 package biz.wittkemper.stationmanager.data.dao;
 
 import java.util.Date;
+import java.util.List;
 
 import biz.wittkemper.stationmanager.data.entity.Mitglied;
 import biz.wittkemper.stationmanager.utils.ParameterUtils;
@@ -36,8 +37,17 @@ public class MitgliedDAOImpl extends AbstractDAOImpl<Mitglied, Long> implements
 	
 	@Override
 	public Mitglied findByNameVorname(String name, String vorname) {
-		// TODO Auto-generated method stub
-		return ;
+		
+		String hsql ="From Mitglied m ";
+		hsql +=" Where m.name = '" + name + "' ";
+		hsql += "AND m.vorname = '" + vorname + "' ";
+		
+		List<Mitglied> list = super.findByQueryString(hsql);
+		
+		if (list.size()> 0){
+			return list.get(0);
+		}
+		return null;
 	}
 
 }

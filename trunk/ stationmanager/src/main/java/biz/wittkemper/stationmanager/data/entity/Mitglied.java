@@ -5,6 +5,7 @@ import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -153,7 +154,7 @@ public class Mitglied implements Serializable {
 		this.eintritt = eintritt;
 	}
 
-	@ManyToOne
+	@ManyToOne(fetch=FetchType.EAGER)
 	public MitgliedStatus getStatus() {
 		return status;
 	}
@@ -178,7 +179,7 @@ public class Mitglied implements Serializable {
 		this.lastChange = lastChange;
 	}
 
-	@ManyToOne
+	@ManyToOne(fetch=FetchType.EAGER)
 	public Anrede getAnrede() {
 		return anrede;
 	}

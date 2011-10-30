@@ -11,6 +11,7 @@ public class DateUtils {
 		try {
 			return format.parse(date);
 		} catch (ParseException e) {
+			System.out.println("Datum falsch: " + e.getMessage());
 			return null;
 		}
 	}
