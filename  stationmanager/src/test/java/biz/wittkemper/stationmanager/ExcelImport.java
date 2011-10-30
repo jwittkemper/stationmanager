@@ -44,6 +44,11 @@ public class ExcelImport {
 		statusAR.setBezeichnungKurz("AR");
 		DAOFactory.getInstance().getMitgliedStatusDAO().save(statusAR);
 
+		MitgliedStatus statusPV = new MitgliedStatus();
+		statusPV.setBezeichnungKurz("PS");
+		statusPV.setBezeichnungLang("Passives Mitglied");
+		DAOFactory.getInstance().getMitgliedStatusDAO().save(statusPV);
+
 		JFileChooser chooser = new JFileChooser();
 
 		int ret = chooser.showDialog(null, "übernehmen");
@@ -59,7 +64,7 @@ public class ExcelImport {
 
 					int max = sheet.getLastRowNum();
 
-					for (int i = 1; i < max; i++) {
+					for (int i = 1; i <= max; i++) {
 						HSSFRow row = sheet.getRow(i);
 
 						Mitglied mitglied = getMitgliedFromRow(row);
@@ -77,41 +82,61 @@ public class ExcelImport {
 					}
 				}
 			}
-			inputFoerderVerein(wb.getSheetAt(2));
+			inputFoerderVerein(wb.getSheetAt(2), statusPV);
 		}
 	}
 
-	private void inputFoerderVerein(HSSFSheet sheet) {
+	private void inputFoerderVerein(HSSFSheet sheet, MitgliedStatus status) {
 
 		int max = sheet.getLastRowNum();
 		System.out.println(sheet.toString());
-		for (int i = 1; i < max; i++) {
+		for (int i = 1; i <= max; i++) {
 			HSSFRow row = sheet.getRow(i);
+			System.out.println("ZEILE " + i );
 			Mitglied mitglied = getFoerderMitgliedFromRow(row);
-			if (mitgliedExist(mitglied)){
+			Mitglied md = mitgliedExist(mitglied);
+			if (md != null) {
+				FoerderMitglied foerderMitglied = new FoerderMitglied();
+				foerderMitglied.setMitglied(md);
+				foerderMitglied.setEintritt(mitglied.getEintritt());
+				DAOFactory.getInstance().getFoerderMitgliedDAO()
+						.save(foerderMitglied);
+			} else {
+				mitglied.setStatus(status);
+				DAOFactory.getInstance().getMitgliedDAO().save(mitglied);
 				FoerderMitglied foerderMitglied = new FoerderMitglied();
 				foerderMitglied.setMitglied(mitglied);
-				DAOFactory.getInstance().getFoerderMitgliedDAO().save(foerderMitglied);
+				foerderMitglied.setEintritt(mitglied.getEintritt());
+				DAOFactory.getInstance().getFoerderMitgliedDAO()
+						.save(foerderMitglied);
 			}
 		}
 
 	}
 
-	private boolean mitgliedExist(Mitglied mitglied) {
-		Mitglied md = DAOFactory.getInstance().getMitgliedDAO().findByNameVorname(mitglied.getName(), mitglied.getVorname());
-		
-		return false;
+	private Mitglied mitgliedExist(Mitglied mitglied) {
+		Mitglied md = DAOFactory.getInstance().getMitgliedDAO()
+				.findByNameVorname(mitglied.getName(), mitglied.getVorname());
+
+		if (md != null) {
+			if (md.getAnrede().getId() != mitglied.getAnrede().getId()) {
+				md.setAnrede(mitglied.getAnrede());
+				DAOFactory.getInstance().getMitgliedDAO().merge(md);
+			}
+
+			return md;
+		}
+		return null;
 	}
 
 	private Mitglied getFoerderMitgliedFromRow(HSSFRow row) {
 		Mitglied mitglied = new Mitglied();
-
 		for (int j = 1; j <= 11; j++) {
 			switch (j) {
 
 			case 1:
 				mitglied.setAnrede(getAnrede(row.getCell(j)));
-				System.out.println(mitglied.getName());
+				System.out.println("Name: " + mitglied.getName());
 				break;
 			case 2:
 				mitglied.setName(row.getCell(j).toString());
@@ -120,11 +145,15 @@ public class ExcelImport {
 				mitglied.setVorname(row.getCell(j).toString());
 				break;
 			case 4:
-				mitglied.setStrasseNr(row.getCell(j).toString());
+				try {
+					mitglied.setStrasseNr(row.getCell(j).toString());
+				} catch (Exception e) {
+					mitglied.setStrasseNr("");
+				}
 				break;
 			case 5:
-				String plz =row.getCell(j).toString().substring(0, 5);
-				
+				String plz = row.getCell(j).toString().substring(0, 5);
+
 				mitglied.setPlz(Integer.parseInt(plz));
 				break;
 
@@ -132,26 +161,45 @@ public class ExcelImport {
 				mitglied.setOrt(row.getCell(j).toString());
 				break;
 			case 7:
-				String datum = row.getCell(j).toString();
+				try {
+					String datum = row.getCell(j).toString();
 
-				mitglied.setGebDatum(DateUtils.getDate(datum));
+					mitglied.setGebDatum(DateUtils.getDate(datum));
+				} catch (Exception e) {
+					mitglied.setGebDatum(null);
+				}
 				break;
 			case 8:
-				if (null != row.getCell(j).toString()) {
-					mitglied.setEintritt(DateUtils.getDate(row.getCell(j)
-							.toString()));
+				try {
+					if (null != row.getCell(j).toString()) {
+						mitglied.setEintritt(DateUtils.getDate(row.getCell(j)
+								.toString()));
+					}
+				} catch (Exception e) {
+					mitglied.setEintritt(null);
+					System.out.println(e);
 				}
 				break;
 			case 9:
-				String telefon = row.getCell(j).toString();
-				String[] tel = telefon.split("/");
-				mitglied.setTelefonPrivatFest(tel[0].trim());
-				if (tel.length > 1)
-					mitglied.setTelefonPrivatMobil(tel[1].trim());
+				try {
+					String telefon = row.getCell(j).toString();
+					String[] tel = telefon.split("/");
+					mitglied.setTelefonPrivatFest(tel[0].trim());
+					if (tel.length > 1)
+						mitglied.setTelefonPrivatMobil(tel[1].trim());
+				} catch (Exception e) {
+					mitglied.setTelefonPrivatMobil("");
+					mitglied.setTelefonPrivatFest("");
+				}
 				break;
 			case 10:
-				if (null != row.getCell(j).toString()) {
-					mitglied.setTelefonDienst(row.getCell(j).toString().trim());
+				try {
+					if (null != row.getCell(j).toString()) {
+						mitglied.setTelefonDienst(row.getCell(j).toString()
+								.trim());
+					}
+				} catch (Exception e) {
+					mitglied.setTelefonDienst("");
 				}
 				break;
 
