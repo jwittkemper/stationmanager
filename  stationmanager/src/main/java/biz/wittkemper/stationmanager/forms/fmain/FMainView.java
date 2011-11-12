@@ -9,8 +9,15 @@ import javax.swing.JInternalFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.WindowConstants;
 
 import biz.wittkemper.stationmanager.utils.FrameUtils;
+import org.jdesktop.swingx.JXStatusBar;
+import javax.swing.JLabel;
+import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Alignment;
+import javax.swing.LayoutStyle.ComponentPlacement;
+import java.awt.BorderLayout;
 
 public class FMainView extends JFrame {
 
@@ -25,7 +32,8 @@ public class FMainView extends JFrame {
 	JMenuItem mntmBeenden;
 	JMenu mnVerwaltung;
 	JMenuItem mntmMitgliederverwaltung;
-	JDesktopPane pane = new JDesktopPane();
+	JDesktopPane pane = new MDIDesktopPane();
+	JXStatusBar statusBar = new JXStatusBar();
 	/**
 	 * Create the frame.
 	 */
@@ -35,9 +43,8 @@ public class FMainView extends JFrame {
 
 	private void initForm() {
 		setTitle("StationManager");
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 972, 617);
-
+		setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 		menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
 
@@ -54,6 +61,11 @@ public class FMainView extends JFrame {
 		mnVerwaltung.add(mntmMitgliederverwaltung);
 		frameUtils.MaximiseFrame(this);
 		setContentPane(pane);
+		pane.setLayout(new BorderLayout(0, 0));
+		
+		getContentPane().add(statusBar, BorderLayout.SOUTH);
+		JLabel label = new JLabel("Datum:");
+		statusBar.add(label);
 
 	}
 
