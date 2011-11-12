@@ -47,7 +47,7 @@ public class FMitgliederVerwaltungController {
 
 	private void loadData(Long id) {
 
-		model.setMitglied(DAOFactory.getInstance().getMitgliedDAO().load(1L));
+		model.setMitglied(DAOFactory.getInstance().getMitgliedDAO().load(id));
 
 	}
 
